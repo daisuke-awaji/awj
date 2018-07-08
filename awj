@@ -1,0 +1,94 @@
+awj() {
+  $(echo "describe_stacks
+describe_stack_url
+describe_change_set_url
+describe_ec2
+describe_elb
+describe_alb
+describe_lambda
+describe_rds
+describe_s3
+describe_logs
+describe_aws_batch_jobs" | peco)
+}
+
+describe_stacks() {
+  STACK_NAME=`aws cloudformation describe-stacks | \
+      jq -r '.Stacks[] | [.StackName, .StackStatus] | @tsv' | \
+      column -t | peco | cut -d ' ' -f 1`
+  echo "aws cloudformation describe-stacks --stack-name ${STACK_NAME}"
+  aws cloudformation describe-stacks --stack-name $STACK_NAME | jq .
+}
+
+describe_stack_url () {
+    BASE_URL='https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stack/detail'
+    STACK_ID=`aws cloudformation describe-stacks | jq -r '.Stacks[] | [.StackId, .StackName, .StackStatus] | @tsv' | \
+      column -t | peco | cut -d ' ' -f 1`
+    open "$BASE_URL?stackId=${STACK_ID}"
+}
+
+describe_change_set_url() {
+    BASE_URL='https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/changeset/detail'
+    CHANGE_SET_ID=`aws cloudformation describe-stacks | jq '.Stacks[] | select (.ChangeSetId != null) | .ChangeSetId' | peco | sed 's/"//g'`
+    open "$BASE_URL?changeSetId=$CHANGE_SET_ID"
+}
+
+describe_ec2() {
+  INSTANCE_ID=`aws ec2 describe-instances | \
+      jq -r '.[][].Instances[] | [.InstanceId, [.Tags[] | select(.Key == "Name").Value][], .InstanceType, .NetworkInterfaces[].PrivateIpAddress, .State.Name] | @tsv' | \
+      column -t | peco | cut -d ' ' -f 1`
+  echo "aws ec2 describe-instances --instance-ids ${INSTANCE_ID}"
+  aws ec2 describe-instances --instance-ids $INSTANCE_ID | jq .
+}
+
+describe_elb() {
+  ELB_NAME=`aws elb describe-load-balancers | \
+    jq -r '.[][] | [.LoadBalancerName, .Instances[][]] | @tsv' | \
+    column -t | peco | cut -d ' ' -f 1`
+  echo "aws elb describe-load-balancers --load-balancer-names $ELB_NAME"
+  aws elb describe-load-balancers --load-balancer-names $ELB_NAME
+}
+
+describe_alb() {
+  ALB_ARN=`aws elbv2 describe-load-balancers | \
+    jq -r '.[][] | [.LoadBalancerArn, .LoadBalancerName] | @tsv' | \
+    column -t | peco | cut -d ' ' -f 1`
+  aws elbv2 describe-listeners --load-balancer-arn $ALB_ARN
+}
+
+describe_rds() {
+  INSTANCE_IDENTIFIRE=`aws rds describe-db-instances | \
+      jq -r '.DBInstances[] | [.DBInstanceIdentifier, .DBInstanceClass, .Endpoint.Address, .DBParameterGroups[].DBParameterGroupName] | @tsv' | \
+      column -t | peco | cut -d ' ' -f 1`
+  echo "aws rds describe-db-instances --db-instance-identifier ${INSTANCE_IDENTIFIRE}"
+  aws rds describe-db-instances --db-instance-identifier $INSTANCE_IDENTIFIRE | jq .
+}
+
+describe_lambda() {
+  FUNCTION_NAME=`aws lambda list-functions | \
+      jq -r '.Functions[] | [.FunctionName, .MemorySize, .LastModified] | @tsv' | \
+      column -t | peco | cut -d ' ' -f 1`
+  echo "aws lambda get-function --function-name $FUNCTION_NAME"
+  aws lambda get-function --function-name $FUNCTION_NAME
+}
+
+describe_s3() {
+  S3=`aws s3 ls | \
+      column -t | peco | cut -d ' ' -f 5`
+  echo "aws s3 ls $S3"
+  aws s3 ls $S3
+}
+
+describe_logs() {
+  LOG=`aws logs describe-log-groups | \
+       jq -r '.logGroups[] | [.logGroupName] | @tsv' | \
+       column -t | peco | cut -d ' ' -f 1`
+  echo "$LOG"
+  aws logs describe-log-streams --log-group-name $LOG
+}
+
+describe_aws_batch_jobs() {
+    JOB=`aws batch describe-job-definitions --status ACTIVE | jq -r '.jobDefinitions[] | [.jobDefinitionName, .status, .revision] | @tsv' | column -t | peco | cut -d ' ' -f 1`
+    echo "$JOB"
+    aws batch describe-job-definitions --job-definition-name $JOB
+}
