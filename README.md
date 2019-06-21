@@ -26,14 +26,14 @@ The origin of the name is "awj" because "aws-cli is supplemented by jq".
 
 ### Install awj
 
-1. Add /usr/loca/bin to PATH environment on OS.
+1. Add /usr/local/bin to PATH environment on OS.
 1. Place the awj file in `/usr/local/bin` and give execute permission.
 1. Execute the following script and make it readable.
   ```
   # Install awj
   $ wget https://raw.githubusercontent.com/daisuke-awaji/awj/master/awj \
          -P /usr/local/bin
-  $ chomod 755 /usr/local/bin/awj
+  $ chmod 755 /usr/local/bin/awj
   ```
 
 
