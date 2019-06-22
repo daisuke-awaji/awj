@@ -1,17 +1,3 @@
-awj() {
-  $(echo "describe_stacks
-describe_stack_url
-describe_change_set_url
-describe_ec2
-describe_elb
-describe_alb
-describe_lambda
-describe_rds
-describe_s3
-describe_logs
-describe_aws_batch_jobs" | peco)
-}
-
 describe_stacks() {
   STACK_NAME=`aws cloudformation describe-stacks | \
       jq -r '.Stacks[] | [.StackName, .StackStatus] | @tsv' | \
@@ -92,3 +78,15 @@ describe_aws_batch_jobs() {
     echo "$JOB"
     aws batch describe-job-definitions --job-definition-name $JOB
 }
+
+$(echo "describe_stacks
+describe_stack_url
+describe_change_set_url
+describe_ec2
+describe_elb
+describe_alb
+describe_lambda
+describe_rds
+describe_s3
+describe_logs
+describe_aws_batch_jobs" | peco)
